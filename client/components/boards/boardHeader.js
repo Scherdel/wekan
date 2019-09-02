@@ -50,12 +50,17 @@ Template.boardChangeTitlePopup.events({
       .$('.js-board-name')
       .val()
       .trim();
+    const newBoardKey = tpl
+      .$('.js-board-key')
+      .val()
+      .trim();
     const newDesc = templateInstance
       .$('.js-board-desc')
       .val()
       .trim();
     if (newTitle) {
       this.rename(newTitle);
+      this.setBoardKey(newBoardKey);
       this.setDescription(newDesc);
       Popup.close();
     }
@@ -185,11 +190,13 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(event) {
     event.preventDefault();
     const title = this.find('.js-new-board-title').value;
+    const boardKey = this.find('.js-new-board-key').value;
     const visibility = this.visibility.get();
 
     this.boardId.set(
       Boards.insert({
         title,
+        boardKey,
         permission: visibility,
       }),
     );

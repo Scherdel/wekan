@@ -170,6 +170,7 @@ Template.boardMenuPopup.events({
     Popup.close();
   },
   'click .js-change-board-color': Popup.open('boardChangeColor'),
+  'click .js-change-board-key-view': Popup.open('boardChangeKeyView'),
   'click .js-change-language': Popup.open('changeLanguage'),
   'click .js-archive-board ': Popup.afterConfirm('archiveBoard', function() {
     const currentBoard = Boards.findOne(Session.get('currentBoard'));
@@ -406,6 +407,60 @@ BlazeComponent.extendComponent({
     ];
   },
 }).register('boardChangeColorPopup');
+
+BlazeComponent.extendComponent({
+  compareSelectedKey(key) {
+    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    return currentBoard.showBoardKey === key;
+  },
+
+  showKeyViewOptions() {
+    // TODO: This may be pretty much nicer
+    const keys = [
+      {
+        key: 'showBoardKey-title-keybrackets',
+        translationKey: 'board-key-view-title-keybrackets',
+        isSelectedKey: this.compareSelectedKey(
+          'showBoardKey-title-keybrackets',
+        ),
+      },
+      {
+        key: 'showBoardKey-key-dash-title',
+        translationKey: 'board-key-view-key-dash-title',
+        isSelectedKey: this.compareSelectedKey('showBoardKey-key-dash-title'),
+      },
+      {
+        key: 'showBoardKey-only-title',
+        translationKey: 'board-key-view-only-title',
+        isSelectedKey: this.compareSelectedKey('showBoardKey-only-title'),
+      },
+      {
+        key: 'showBoardKey-only-key',
+        translationKey: 'board-key-view-only-key',
+        isSelectedKey: this.compareSelectedKey('showBoardKey-only-key'),
+      },
+    ];
+
+    return keys;
+  },
+
+  events() {
+    return [
+      {
+        'click .js-board-key-field-list'(evt) {
+          const currentBoard = Boards.findOne(Session.get('currentBoard'));
+
+          let value = evt.target.value;
+          if (value === 'null') {
+            value = 'showBoardKey-only-title';
+          }
+          currentBoard.setShowBoardKey(value);
+          evt.preventDefault();
+        },
+      },
+    ];
+  },
+}).register('boardChangeKeyViewPopup');
 
 BlazeComponent.extendComponent({
   onCreated() {

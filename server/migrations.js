@@ -769,3 +769,40 @@ Migrations.add('add-missing-created-and-modified', () => {
       console.error(e);
     });
 });
+
+Migrations.add('add-board-keys', () => {
+  /*
+    - Insert a new key into every board
+    - Set default value for 'showBoardKey'
+    - PreSeed fullTitle with title
+  */
+
+  // Get amount of boards, we create keys starting at least with A00 (12960 to 46655 in decimal = 33,695 boards)
+  // If count is >    33695 we need to start with A000 (466560 to 1679616 = 1,213,056 boards)
+  // If count is >  1213056 we need to start with A0000 (16796160 to 60466175 = 43,670,015 boards)
+  // If count is > 16796160 we need to start with A00000 (604661760 to 2176782335 = 1,572,120,575 boards)
+  // I hope this migration is save enough for every user :-)
+
+  let startValue = parseInt('A00', 36);
+  const boardCount = Boards.find().count();
+
+  if (boardCount > 33695) startValue = parseInt('A000', 36);
+  if (boardCount > 1213056) startValue = parseInt('A0000', 36);
+  if (boardCount > 16796160) startValue = parseInt('A00000', 36);
+
+  Boards.find().forEach(board => {
+    Boards.update(
+      board._id,
+      {
+        $set: {
+          boardKey: startValue.toString(36).toUpperCase(),
+          showBoardKey: 'showBoardKey-only-title',
+          fullTitle: board.title,
+        },
+      },
+      noValidate,
+    );
+
+    startValue++;
+  });
+});

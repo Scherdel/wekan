@@ -11,6 +11,69 @@ Boards.attachSchema(
        */
       type: String,
     },
+    boardKey: {
+      /**
+       * The key of the board
+       */
+      type: String,
+      min: 3,
+    },
+    showBoardKey: {
+      /**
+       * Saved configuration how to show the key
+       */
+      allowedValues: [
+        'showBoardKey-only-title',
+        'showBoardKey-only-key',
+        'showBoardKey-title-keybrackets',
+        'showBoardKey-key-dash-title',
+      ],
+      type: String,
+      defaultValue: 'showBoardKey-only-title',
+    },
+    fullTitle: {
+      /**
+       * The full title of the board, shown like 'showBoardKey' configured
+       */
+      type: String,
+      // eslint-disable-next-line consistent-return
+      autoValue() {
+        // Fetch required fields
+        const title = this.field('title');
+        const boardKey = this.field('boardKey');
+        const showBoardKey = this.field('showBoardKey');
+
+        // Only act on insert or update
+        // and then all three required fields are set
+        if (
+          (this.isInsert || this.isUpdate) &&
+          !this.isSet &&
+          title.isSet &&
+          boardKey.isSet &&
+          showBoardKey.isSet
+        ) {
+          // Calculate the fullTitle
+          let fullTitle = '';
+
+          switch (showBoardKey.value) {
+            case 'showBoardKey-key-dash-title':
+              fullTitle = `${boardKey.value} - ${title.value}`;
+              break;
+            case 'showBoardKey-only-key':
+              fullTitle = boardKey.value;
+              break;
+            case 'showBoardKey-title-keybrackets':
+              fullTitle = `${title.value} (${boardKey.value})`;
+              break;
+            case 'showBoardKey-only-title':
+            default:
+              fullTitle = title.value;
+          }
+
+          return fullTitle;
+        }
+      },
+    },
     slug: {
       /**
        * The title slugified.
@@ -748,7 +811,42 @@ Boards.mutations({
   },
 
   rename(title) {
-    return { $set: { title } };
+    // If the title changes, we need to re-set the
+    // values for 'boardKey' and 'showBoardKey', too.
+    // If not, the 'fullTitle' autovalue does not get set.
+    return {
+      $set: {
+        title,
+        boardKey: this.boardKey,
+        showBoardKey: this.showBoardKey,
+      },
+    };
+  },
+
+  setBoardKey(boardKey) {
+    // If the boardKey changes, we need to re-set the
+    // values for 'title' and 'showBoardKey', too.
+    // If not, the 'fullTitle' autovalue does not get set.
+    return {
+      $set: {
+        title: this.title,
+        boardKey,
+        showBoardKey: this.showBoardKey,
+      },
+    };
+  },
+
+  setShowBoardKey(showBoardKey) {
+    // If the showBoardKey changes, we need to re-set the
+    // values for 'title' and 'boardKey', too.
+    // If not, the 'fullTitle' autovalue does not get set.
+    return {
+      $set: {
+        title: this.title,
+        boardKey: this.boardKey,
+        showBoardKey,
+      },
+    };
   },
 
   setDescription(description) {
